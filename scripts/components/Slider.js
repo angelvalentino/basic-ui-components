@@ -136,7 +136,7 @@ export class Slider {
           aria-roledescription="slide"
           aria-label="${i + 1} of ${images.length}"
           class="image-slider__img" src="${url}" 
-          alt="${alt}">
+          alt="${alt}"
         >
       `
     )).join('');
