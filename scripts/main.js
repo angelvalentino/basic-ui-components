@@ -1,8 +1,7 @@
 import { 
   Carousel,
   carouselImages
-} 
-from './components/Carousel.js'
+} from './components/Carousel.js'
 
 import {
   accordionData,
