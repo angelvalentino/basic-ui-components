@@ -71,34 +71,31 @@ export class Carousel {
   // Handle the scroll event to show/hide navigation buttons based on scroll
   setSliderButtonVisibility() {
     // Maximum scrollable width of the carousel
-    const maxScrollLeft = this.lms.sliderLm.scrollWidth - this.lms.sliderLm.clientWidth;
+    const maxScroll = this.lms.sliderLm.scrollWidth - this.lms.sliderLm.clientWidth;
     // Current scroll position
-    const currentScrollLeft = this.lms.sliderLm.scrollLeft;
-  
+    const currentScroll = this.lms.sliderLm.scrollLeft;
+
     // Hide the next button if scrolled to the maximum width
-    if (currentScrollLeft === maxScrollLeft) {
-      // Scrolled to the maximum width
+    // Allow a 1px tolerance to handle fractional scroll values
+    if (Math.abs(currentScroll - maxScroll) < 1) {
       this.lms.nextBtn.style.display = 'none';
     } 
-    else if (currentScrollLeft < maxScrollLeft) {
-      // Show the next button if not at the maximum width
+    else if (currentScroll < maxScroll) {
       this.lms.nextBtn.style.display = 'initial';
     }
   
     // Hide the previous button if scrolled to the initial width
-    if (currentScrollLeft === 0) {
-      // Scrolled to the initial width
+    if (currentScroll === 0) {
       this.lms.prevBtn.style.display = 'none';
     } 
-    else if (currentScrollLeft !== 0)
-      // Show the previous button if not at the initial width
+    else if (currentScroll !== 0) {
       this.lms.prevBtn.style.display = 'initial';
+    }
   }
 
-  // Generate the HTML for the list of images
   static generateImageList(images) {
     return images.map(({ url, alt }) => (
-      `
+      /*html*/`
         <li>
           <img src="${url}" alt="${alt}">
         </li>
@@ -106,10 +103,9 @@ export class Carousel {
     )).join('');
   }
 
-  // Generate the complete HTML structure for the carousel
   static generateCarousel(contentArray, id) {
     return (
-      `
+       /*html*/`
         <button aria-controls="${id}" class="carousel__btn carousel__prev-btn">
           <svg class="carousel__chevron-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
             <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 6l-6 6l6 6" />
