@@ -3,15 +3,15 @@ import { handleSwipe } from "../utils.js";
 export const imagesUrls = [
   {
     url:'./images/scotland.png',
-    alt: 'Green Scotland meadow'
+    alt: `Scotland's green mountains and meadows under a clear sky`
   },
   {
     url: './images/scotland-2.png',
-    alt: 'Green Scotland meadow'
+    alt: `Scotland's Glenfinnan Viaduct with a vintage train puffing soft vapor smoke, surrounded by green hills and mountains under a clear sky`
   },
   {
     url: './images/scotland-3.png',
-    alt: 'Green Scotland meadow'
+    alt: `Scotland's misty mountains with yellow and brown hues under a foggy sky`
   }
 ];
 
@@ -25,7 +25,7 @@ export class Slider {
     // Initialize slider properties and render initial slider HTML
     this.images = imagesArray;
     this.imageIndex = 0;
-    root.innerHTML = Slider.generateSlider(imagesArray, this.imageIndex, root.id);
+    root.innerHTML = this.generateSlider(root.id);
 
     // DOM references
     this.lms = {
@@ -34,69 +34,96 @@ export class Slider {
       imageSliderLm: root
     }
 
-    // Update the UI of slider controls based on the initial image index
-    this.updateSliderControls();
+    this.lms.controls = [...this.lms.imageSliderControlsLm.querySelectorAll('button')];
+    this.lms.images = [...this.lms.imageContainerLm.children];
 
     // Add event listeners for control buttons and slider click events
-    this.lms.imageSliderControlsLm.addEventListener('click', this.setSlide.bind(this));
+    this.lms.imageSliderControlsLm.addEventListener('click', this.handleNavClick.bind(this));
     this.lms.imageSliderLm.addEventListener('click', this.handleSliderClick.bind(this));
-    
-    // Add swipe event listeners for touch devices
+    this.lms.imageSliderControlsLm.addEventListener('keydown', this.handleKeydown.bind(this));
+
     this.addSwipeEventsToSlider();
+
+    this.setSlide(this.imageIndex, true);
   }
 
-  // Update the control buttons to reflect the current slide
-  updateSliderControls() {
-    const controls = [...this.lms.imageSliderControlsLm.querySelectorAll('button')];
-    controls.forEach((control) => {
-      // Highlight the active control button and update aria-selected attribute
-      if (Number(control.dataset.index) === this.imageIndex) {
-        control.classList.add('active');
-        control.ariaSelected = true;
-      } 
-      else {
-        control.classList.remove('active');
-        control.ariaSelected = false;
-      }
+  handleKeydown(e) {
+    let nextIndex = null;
+
+    switch (e.key) {
+      case 'ArrowRight':
+        e.preventDefault();
+        nextIndex = this.slide('right');
+        break;
+      case 'ArrowLeft':
+        e.preventDefault();
+        nextIndex = this.slide('left');
+        break;
+      case 'Home':
+        e.preventDefault();
+        nextIndex = 0;
+        this.setSlide(nextIndex);
+        break;
+      case 'End':
+        e.preventDefault();
+        nextIndex = this.lms.controls.length - 1;
+        this.setSlide(nextIndex)
+        break;
+      default:
+        return;
+    }
+
+    this.lms.controls[nextIndex].focus();
+  }
+
+  updateSliderControls() {    
+    this.lms.controls.forEach((control) => {
+      const isActive = Number(control.dataset.index) === this.imageIndex;
+
+      control.classList.toggle('active', isActive);
+      control.ariaSelected = isActive;
+      control.tabIndex = isActive ? 0 : -1;
     });
   }
   
-   // Update the image display and ARIA attributes based on the current slide
   updateSliderImage() {
-    const images = [...this.lms.imageContainerLm.children]
-    images.forEach((image, i) => {
-      // Adjust image position based on the current index and update aria-hidden attribute
+    this.lms.images.forEach((image, i) => {
       image.style.transform = `translateX(${-100 * this.imageIndex}%)`;
       image.ariaHidden = i !== this.imageIndex
-    })
-  
-    // Update the controls to reflect the new active slide
-    this.updateSliderControls();
+    });
   }
 
-  // Move to the next or previous slide based on direction
   slide(direction) {
+    let index = this.imageIndex;
+
     if (direction === 'left') {
       // Move left: wrap around to the last image if imageIndex is at the beginning
-      this.imageIndex = this.imageIndex === 0 ? this.images.length - 1 : --this.imageIndex;
+      index = this.imageIndex === 0 ? this.images.length - 1 : --index;
     } 
     else {
       // Move right: wrap around to the first image if imageIndex is at the end
-      this.imageIndex = this.imageIndex === this.images.length - 1 ? 0 : ++this.imageIndex;
+      index = this.imageIndex === this.images.length - 1 ? 0 : ++index;
     }
 
-    // Update the slider to reflect the new slide
-    this.updateSliderImage();
+    this.setSlide(index);
+    return index;
   }
 
-  // Set the slide index based on the control button clicked
-  setSlide(e) {
+  handleNavClick(e) {
     if (e.target.classList.contains('image-slider__control-btn')) {
-      // Update image index from the button's data-index attribute
-      this.imageIndex = Number(e.target.dataset.index);
-      // Update the slider to reflect the selected slide
-      this.updateSliderImage();
+      const index = Number(e.target.dataset.index);
+      this.setSlide(index);
     }
+  }
+
+  setSlide(i, bypass) {
+    if (!bypass && this.imageIndex === i) {
+      console.log('same')
+      return;
+    }
+    this.imageIndex = i;
+    this.updateSliderControls();
+    this.updateSliderImage();
   }
 
   // Handle click events for previous and next buttons
@@ -125,51 +152,52 @@ export class Slider {
     this.lms.imageSliderLm.addEventListener('touchend', handleTouchEnd);
   }
 
-  // Generate accessible HTML for slider images
-  static generateSliderImages(images, imageIndex, id) {
-    return images.map(({url, alt}, i) => (
-      `
+  generateSliderImages(id) {
+    return this.images.map(({url, alt}, i) => (
+      /*html*/`
         <img 
+          aria-hidden="${this.imageIndex !== i}" 
+          aria-roledescription="slide"
+          aria-label="${i + 1} of ${this.images.length}"
           role="tabpanel" 
           id="${id}__item-${i + 1}" 
-          aria-hidden="${imageIndex !== i}" 
-          aria-roledescription="slide"
-          aria-label="${i + 1} of ${images.length}"
           class="image-slider__img" src="${url}" 
-          alt="${alt}"
+          alt="${alt} (image ${i + 1} of ${this.images.length})"
         >
       `
     )).join('');
   }
 
-  // Generate accessible HTML for control buttons
-  static generateSliderControls(images, imageIndex, id) {
-    return images.map((_, i) => (
-      `
+  generateSliderControls(id) {
+    return this.images.map(({ alt }, i) => (
+      /*html*/`
         <li role="presentation">
           <button 
             role="tab" 
-            aria-selected="${i === imageIndex}"
+            aria-selected="${i === this.imageIndex}"
             aria-controls="${id}__item-${i + 1}"
-            aria-label="Show image ${i + 1}."
+            aria-label="Select ${alt} (image ${i + 1} of ${this.images.length})"
             class="image-slider__control-btn" 
-            data-index="${i}">
+            data-index="${i}"
+            tabindex="${i === this.imageIndex ? 0 : -1}"
+            draggable="false"
+            title="${alt}"
+          >
           </button>
         </li>
       `
     )).join('');
   }
   
-  // Generate the complete HTML structure for the slider component
-  static generateSlider(images, imageIndex, id) {
+  generateSlider(id) {
     return (
-      `
+      /*html*/`
         <div class="image-slider__img-container">
-          ${Slider.generateSliderImages(images, imageIndex, id)}
+          ${this.generateSliderImages(id)}
         </div>
 
         <ul role="tablist" class="image-slider__controls">
-          ${Slider.generateSliderControls(images, imageIndex, id)}
+          ${this.generateSliderControls(id)}
         </ul>
 
         <button aria-label="Show previous image" class="image-slider__btn image-slider__prev-btn">
