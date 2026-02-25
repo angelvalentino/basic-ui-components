@@ -88,7 +88,7 @@ export class Carousel {
     if (currentScroll === 0) {
       this.lms.prevBtn.style.display = 'none';
     } 
-    else if (currentScroll !== 0) {
+    else {
       this.lms.prevBtn.style.display = 'initial';
     }
   }
