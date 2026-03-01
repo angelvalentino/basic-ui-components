@@ -77,7 +77,7 @@ export class Carousel {
 
     // Hide the next button if scrolled to the maximum width
     // Allow a 1px tolerance to handle fractional scroll values
-    if (Math.abs(currentScroll - maxScroll) < 1) {
+    if (Math.abs(currentScroll - maxScroll) <= 1) {
       this.lms.nextBtn.style.display = 'none';
     } 
     else if (currentScroll < maxScroll) {
